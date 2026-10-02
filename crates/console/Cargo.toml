@@ -18,6 +18,7 @@ asset_world.workspace = true
 assets = { path = "../assets" }
 audio = { path = "../audio" }
 input_iw4.workspace = true
+movement_iw4.workspace = true
 net = { path = "../net" }
 render = { path = "../render" }
 render_frontend.workspace = true

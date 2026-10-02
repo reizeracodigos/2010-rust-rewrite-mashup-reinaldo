@@ -30,6 +30,7 @@ mod slide;
 mod snap;
 mod sprint;
 mod stance;
+pub mod ultra;
 mod viewangles;
 mod walk;
 

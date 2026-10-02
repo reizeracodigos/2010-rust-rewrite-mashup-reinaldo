@@ -1,4 +1,4 @@
-use playerstate_iw4::{ENTITYNUM_NONE, PM_TYPE_NORMAL_LINKED, PlayerState, UserCmd};
+use playerstate_iw4::{ENTITYNUM_NONE, PM_TYPE_NORMAL_LINKED, PlayerState, UserCmd, buttons};
 
 use crate::{
     AdsFracContext, AdsIntentContext, AirMoveContext, CheckLadderContext, CollisionBackend,
@@ -93,6 +93,25 @@ pub fn pmove<C: CollisionBackend, L: MantleXAnimLength, R: MantleRootDelta>(
         jump_animations: [None; 4],
         mantle_movetype: None,
         landing_animation: false,
+        ultra: false,
+    };
+
+    let ultra = crate::ultra::active(cmd);
+    pml.ultra = ultra;
+    if ultra {
+        crate::ultra::begin(ps);
+    } else if ps.ultra_flags != 0 {
+        crate::ultra::clear(ps);
+    }
+    // V1's dash and slide reuse IW4's sprint and prone buttons, so IW4's own
+    // sprint and stance code sees them as plain crouch.
+    let iw4_cmd = if ultra {
+        UserCmd {
+            buttons: crate::ultra::iw4_buttons(cmd.buttons),
+            ..*cmd
+        }
+    } else {
+        *cmd
     };
 
     update_view_angles(ps, cmd, context.view_angles);
@@ -118,15 +137,30 @@ pub fn pmove<C: CollisionBackend, L: MantleXAnimLength, R: MantleRootDelta>(
             .allsolid
             == 0;
     }
-    let sprint_change = update_sprint(ps, cmd, context.old_buttons, sprint);
+    let sprint_change = update_sprint(ps, &iw4_cmd, context.old_buttons, sprint);
     let previous_stance = ps.pm_flags & 3;
-    update_stance_flags(
-        ps,
-        cmd,
-        collision,
-        context.bounds,
-        context.weapon_blocks_prone,
-    );
+    if ultra {
+        let mut stance_cmd = iw4_cmd;
+        update_stance_flags(
+            ps,
+            &mut stance_cmd,
+            collision,
+            context.bounds,
+            context.weapon_blocks_prone,
+        );
+        // On a ladder IW4 drops the crouch: V1 doesn't slide or slam there either.
+        if stance_cmd.buttons & buttons::CROUCH == 0 {
+            cmd.buttons &= !(buttons::CROUCH | buttons::PRONE);
+        }
+    } else {
+        update_stance_flags(
+            ps,
+            cmd,
+            collision,
+            context.bounds,
+            context.weapon_blocks_prone,
+        );
+    }
     let stance_event = if ps.pm_flags & pm_flags::SPRINTING == 0 {
         match (previous_stance, ps.pm_flags & 3) {
             (1, 0) => Some(16),
@@ -171,7 +205,10 @@ pub fn pmove<C: CollisionBackend, L: MantleXAnimLength, R: MantleRootDelta>(
         };
     }
 
-    if (ps.pm_flags & pm_flags::MANTLE) == 0 {
+    if ultra {
+        // V1 has no mantle.
+        complete_ground_trace(ps, &mut pml, bounds, cmd.forwardmove, collision);
+    } else if (ps.pm_flags & pm_flags::MANTLE) == 0 {
         // Mantle root motion owns the path through the ledge. Ground solid
         // correction during that path would push the player back off it.
         complete_ground_trace(ps, &mut pml, bounds, cmd.forwardmove, collision);
@@ -243,6 +280,17 @@ pub fn pmove<C: CollisionBackend, L: MantleXAnimLength, R: MantleRootDelta>(
                 bounds.mins,
                 bounds.maxs,
                 bounds.tracemask,
+                collision,
+            );
+        } else if ultra {
+            crate::ultra::ultra_move(
+                ps,
+                &mut pml,
+                cmd,
+                crate::ultra::UltraMoveContext {
+                    old_buttons: context.old_buttons,
+                },
+                bounds,
                 collision,
             );
         } else if pml.walking == 0 {

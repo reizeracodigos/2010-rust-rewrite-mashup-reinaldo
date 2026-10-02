@@ -705,7 +705,11 @@ fn apply_weapon_switch_requests(
 }
 
 pub fn sample_client_input(
-    (skate, mut minecraft): (Option<Res<frame::SkateMode>>, Option<ResMut<frame::MinecraftUi>>),
+    (skate, mut minecraft, ultra): (
+        Option<Res<frame::SkateMode>>,
+        Option<ResMut<frame::MinecraftUi>>,
+        Option<Res<frame::UltraMode>>,
+    ),
     time: Res<Time<Real>>,
     mut actions: ResMut<ClientActionInput>,
     mut look: ResMut<LookState>,
@@ -1077,6 +1081,9 @@ pub fn sample_client_input(
     }
     if minecraft.as_ref().is_some_and(|ui| ui.active && ui.holding_item) {
         cmd.buttons &= !(playerstate_iw4::buttons::ATTACK | playerstate_iw4::buttons::ADS);
+    }
+    if ultra.as_ref().is_some_and(|mode| mode.active) {
+        cmd.buttons |= playerstate_iw4::buttons::ULTRA;
     }
     look.angles = cmd.angles;
     if !frozen

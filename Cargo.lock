@@ -2210,6 +2210,7 @@ dependencies = [
  "hud",
  "input_iw4",
  "master_protocol",
+ "movement_iw4",
  "net",
  "perf",
  "render",
