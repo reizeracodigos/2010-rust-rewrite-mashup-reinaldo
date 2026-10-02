@@ -53,6 +53,19 @@ You don't need Minecraft installed. The first time the game starts, it downloads
 
 More about skating in [docs/SKATE.md](docs/SKATE.md).
 
+## ULTRAKILL movement (V1)
+
+Press **K** on any map, or type `ultra` in the console, to move like V1 from ULTRAKILL. Press K again to go back to MW2 movement. Your guns stay as they are.
+
+| Keyboard and mouse | Action |
+| --- | --- |
+| Sprint (Shift) | Dash. Three charges of stamina, shown at the bottom left, that refill on their own |
+| Crouch, on the ground | Slide. It keeps its speed until you let go; jump out of it to keep the momentum |
+| Crouch, in the air | Slam straight down. Jump right after landing for a slam bounce: the higher the slam, the higher the bounce |
+| Jump, next to a wall in the air | Wall jump, up to three before touching the ground again |
+
+This is a rewrite from scratch of how V1 moves, tuned by feel. No ULTRAKILL code or files are used.
+
 ## Controller
 
 Plug in a controller and play; the game follows whichever controller you last touched. Menus work with the D-pad or left stick, **A** to select and **B** to go back.

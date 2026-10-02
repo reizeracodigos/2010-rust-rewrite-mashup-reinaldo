@@ -54,5 +54,10 @@ pub mod buttons {
 
     pub const OFFHAND_HOLD_CANCEL: u32 = 0x200000;
 
+    /// Not a retail button: the client is in ULTRAKILL movement mode, so
+    /// pmove runs V1's movement for this command. Sprint dashes, crouch
+    /// slides on the ground and slams in the air.
+    pub const ULTRA: u32 = 0x400000;
+
     pub const SPRINT_INTERFERING: u32 = 0xcc35;
 }

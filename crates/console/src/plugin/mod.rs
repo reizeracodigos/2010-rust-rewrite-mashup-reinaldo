@@ -80,6 +80,8 @@ pub struct ConsolePlugin;
 impl Plugin for ConsolePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, crate::debug_move::update_skate_overlay.in_set(ClientSet::Ui));
+        app.init_resource::<frame::UltraMode>()
+            .add_systems(Update, crate::debug_move::update_ultra_overlay.in_set(ClientSet::Ui));
         crate::startup::install_stdin(app);
         app.init_resource::<ConsoleSettings>()
             .init_resource::<ConsoleState>()
@@ -293,7 +295,11 @@ fn publish_client_action_input(
     binds: Res<KeyBinds>,
     mut scripted: ResMut<ConsoleInputState>,
     console: Res<ConsoleState>,
-    (script_menus, minecraft): (Option<Res<hud::ScriptMenus>>, Option<Res<frame::MinecraftUi>>),
+    (script_menus, minecraft, mut ultra): (
+        Option<Res<hud::ScriptMenus>>,
+        Option<Res<frame::MinecraftUi>>,
+        ResMut<frame::UltraMode>,
+    ),
     mut hud_input: ResMut<frame::HudInputView>,
     settings: Res<frame::GameSettings>,
     mut out: ResMut<ClientActionInput>,
@@ -358,6 +364,10 @@ fn publish_client_action_input(
     });
     if !skate.input_blocked && (keys.just_pressed(KeyCode::KeyJ) || sticks_clicked) {
         skate.toggle_requested = true;
+    }
+    // K toggles ULTRAKILL's V1 movement.
+    if !skate.input_blocked && keys.just_pressed(KeyCode::KeyK) {
+        ultra.active = !ultra.active;
     }
     let modal_captured = console.open
         || script_menu

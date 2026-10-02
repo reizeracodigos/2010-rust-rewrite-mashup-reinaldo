@@ -15,12 +15,36 @@ use crate::{
 pub(crate) struct ShowposHud;
 #[derive(Component)]
 pub(crate) struct SkateHud;
+#[derive(Component)]
+pub(crate) struct UltraHud;
 
 pub(crate) fn spawn_showpos_hud(commands: &mut Commands, font: Handle<Font>) {
     commands.spawn((SkateHud, UiLayer::Overlay, Visibility::Hidden,
         Node { position_type: PositionType::Absolute, bottom:px(24), left:px(24),padding:UiRect::all(px(8)), ..default() },
         BackgroundColor(Color::srgba(0.02,0.03,0.04,0.7)),GlobalZIndex(19000),Text::new(""),
         TextFont{font:font.clone().into(),font_size:FontSize::Px(18.),..default()},TextColor(Color::WHITE)));
+
+    commands.spawn((
+        UltraHud,
+        UiLayer::Overlay,
+        Visibility::Hidden,
+        Node {
+            position_type: PositionType::Absolute,
+            bottom: px(24),
+            left: px(24),
+            padding: UiRect::all(px(8)),
+            ..default()
+        },
+        BackgroundColor(Color::srgba(0.08, 0.0, 0.0, 0.7)),
+        GlobalZIndex(19_000),
+        Text::new(""),
+        TextFont {
+            font: font.clone().into(),
+            font_size: FontSize::Px(18.0),
+            ..default()
+        },
+        TextColor(Color::srgb(1.0, 0.25, 0.2)),
+    ));
 
     commands.spawn((
         ShowposHud,
@@ -47,6 +71,7 @@ pub(crate) fn spawn_showpos_hud(commands: &mut Commands, font: Handle<Font>) {
 
 pub(crate) fn register_debug_move_commands(registry: &mut ConsoleRegistry) {
     registry.register(crate::CommandSpec::new("skate").usage("skate [on|off|status] - local Skate gameplay (J toggles)"));
+    registry.register(crate::CommandSpec::new("ultra").usage("ultra [on|off] - ULTRAKILL V1 movement (K toggles)"));
     if registry.resolve("showpos").is_none() {
         registry.register(
             crate::CommandSpec::new("showpos")
@@ -104,7 +129,7 @@ pub(crate) fn register_debug_move_commands(registry: &mut ConsoleRegistry) {
 }
 
 pub(crate) fn route_debug_move_commands(
-    mut skate: ResMut<frame::SkateMode>,
+    (mut skate, mut ultra): (ResMut<frame::SkateMode>, ResMut<frame::UltraMode>),
     mut events: MessageReader<ConsoleCommand>,
     mut console: ResMut<ConsoleState>,
     settings: Res<ConsoleSettings>,
@@ -136,6 +161,19 @@ pub(crate) fn route_debug_move_commands(
                     _ => { echo("usage: skate [on|off|status]".into(), &mut console, &mut line); continue; }
                 }
                 echo(format!("skate active={} ready={} controller={:?} tick={} {}",skate.active,skate.preloaded,skate.controller,skate.tick,skate.status),&mut console,&mut line);
+            }
+
+            "ultra" => {
+                match cmd.args.first().map(String::as_str) {
+                    Some("on") | Some("1") => ultra.active = true,
+                    Some("off") | Some("0") => ultra.active = false,
+                    None => ultra.active = !ultra.active,
+                    _ => {
+                        echo("usage: ultra [on|off]".into(), &mut console, &mut line);
+                        continue;
+                    }
+                }
+                echo(format!("ultra {}", if ultra.active { "on" } else { "off" }), &mut console, &mut line);
             }
 
             "showpos" | "debug_pos" => match cmd.args.first().map(String::as_str) {
@@ -820,5 +858,34 @@ pub(crate) fn update_skate_overlay(mode:Res<frame::SkateMode>,mut hud:Query<(&mu
         else if mode.entering && !mode.preloaded {"Skate is finishing map preparation... | J: cancel".into()}
         else if mode.controller.is_none() {"SKATE | Connect a controller | J: return to MW2".into()}
         else {"SKATE | Original controller controls | Start: pause | J: return to MW2".into()};
+    }
+}
+
+/// V1's stamina bar and controls while ULTRAKILL movement is on.
+pub(crate) fn update_ultra_overlay(
+    mode: Res<frame::UltraMode>,
+    prediction: Res<net::ClientPredictionState>,
+    presented: Res<PresentedSnapshot>,
+    local: Res<LocalPresentClient>,
+    mut hud: Query<(&mut Text, &mut Visibility), With<UltraHud>>,
+) {
+    let ps = prediction.0.predicted_local().or_else(|| presented.player(local.0));
+    for (mut text, mut visibility) in &mut hud {
+        *visibility = if mode.active { Visibility::Visible } else { Visibility::Hidden };
+        if !mode.active {
+            continue;
+        }
+        let (charges, partial) = ps.map_or((0, 0.0), movement_iw4::ultra::stamina_charges);
+        let bar: String = (0..3)
+            .map(|i| match i.cmp(&charges) {
+                core::cmp::Ordering::Less => '█',
+                core::cmp::Ordering::Equal if partial >= 0.5 => '▓',
+                core::cmp::Ordering::Equal if partial > 0.0 => '▒',
+                _ => '░',
+            })
+            .collect();
+        **text = format!(
+            "V1  {bar}  | Sprint: dash | Crouch: slide / slam | Jump at a wall: wall jump | K: back to MW2"
+        );
     }
 }

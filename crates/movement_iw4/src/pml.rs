@@ -15,6 +15,8 @@ pub struct Pml {
     pub jump_animations: [Option<(crate::JumpAnimation, bool)>; 4],
     pub mantle_movetype: Option<u8>,
     pub landing_animation: bool,
+    /// The command moves as ULTRAKILL's V1, which lands without IW4's hard-landing slowdown.
+    pub ultra: bool,
 }
 
 impl Pml {

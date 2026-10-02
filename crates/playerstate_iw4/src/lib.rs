@@ -17,7 +17,7 @@ pub use playerstate::{
     AnimPair, BREATH_GASP_TIME_MS, BREATH_HOLD_TIME_MS, ENTITYNUM_NONE, PERK_COLDBLOODED,
     PERK_FASTMANTLE, PERK_HEARTBREAKER, PERK_PISTOLDEATH, PERK_QUIETER, PERK_SCAVENGER,
     PlayerState, eflags,
-    get_viewmodel_weapon_index, mantle_flags, other_flags, pm_flags, weap_flags,
+    get_viewmodel_weapon_index, mantle_flags, other_flags, pm_flags, ultra_flags, weap_flags,
 };
 pub use seat::{
     HITSCAN_KILL_CAM_ENTITY, SeatFocus, apply_killcam_seat, rebase_archived_timers,

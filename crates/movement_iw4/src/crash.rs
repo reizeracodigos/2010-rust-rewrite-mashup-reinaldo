@@ -27,8 +27,13 @@ pub fn crash_land(ps: &mut PlayerState, pml: &mut Pml) {
     let Some(fall_height) = crash_land_fall_height(ps, pml) else {
         return;
     };
-    pml.landing_animation |= fall_height > FALL_HARD_IN;
     let surface = jump::ground_surface_type(pml.ground_trace[4]);
+    if pml.ultra {
+        // V1 keeps its momentum on landing: footstep sound only.
+        crash_land_apply_sfx(ps, fall_height.min(FALL_HARD_IN - 1.0), surface);
+        return;
+    }
+    pml.landing_animation |= fall_height > FALL_HARD_IN;
     crash_land_apply_sfx(ps, fall_height, surface);
 }
 

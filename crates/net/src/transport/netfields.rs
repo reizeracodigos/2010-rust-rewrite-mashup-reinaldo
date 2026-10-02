@@ -364,6 +364,12 @@ ps_netfields! {
     recoil_scale: i32 = Replication::Replicated, Validation::Exact;
     hold_breath_timer: i32 = Replication::Replicated, Validation::Exact;
     hold_breath_scale: f32 = Replication::Replicated, Validation::Exact;
+    ultra_flags: u32 = Replication::Replicated, Validation::Exact;
+    ultra_stamina: i32 = Replication::Replicated, Validation::Exact;
+    ultra_dash_time: i32 = Replication::Replicated, Validation::Exact;
+    ultra_wall_jumps: i32 = Replication::Replicated, Validation::Exact;
+    ultra_slam_time: i32 = Replication::Replicated, Validation::Exact;
+    ultra_slam_height: f32 = Replication::Replicated, Validation::Exact;
 }
 
 pub const PS_FIELD_COUNT: usize = PS_NETFIELDS.len();

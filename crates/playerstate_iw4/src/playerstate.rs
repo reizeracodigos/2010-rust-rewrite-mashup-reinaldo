@@ -119,6 +119,18 @@ pub struct PlayerState {
     pub kill_cam_look_at_entity: i32,
     pub kill_cam_client_num: i32,
     pub recoil_scale: i32,
+    /// ULTRAKILL's V1 movement (not part of retail IW4); see `ultra_flags`.
+    pub ultra_flags: u32,
+    /// Dash stamina, 100 per charge.
+    pub ultra_stamina: i32,
+    /// Milliseconds left in the current dash.
+    pub ultra_dash_time: i32,
+    /// Wall jumps used since last touching the ground.
+    pub ultra_wall_jumps: i32,
+    /// Server time of the last slam landing.
+    pub ultra_slam_time: i32,
+    /// Height of the last slam, measured from where it started to where it landed.
+    pub ultra_slam_height: f32,
 }
 
 pub mod eflags {
@@ -177,6 +189,19 @@ pub mod pm_flags {
     pub const SPRINT_BLOCKED: u32 = 0x0002_0000;
 
     pub const LAST_STAND: u32 = 0x0040_0000;
+}
+
+pub mod ultra_flags {
+    /// The player moved as V1 on the last command.
+    pub const ACTIVE: u32 = 1 << 0;
+
+    pub const SLIDING: u32 = 1 << 1;
+
+    pub const SLAMMING: u32 = 1 << 2;
+
+    /// The dash button was held on the last command, for edge detection: the
+    /// sprint bit is kept out of IW4's own sprint, so `old_buttons` can't tell.
+    pub const DASH_HELD: u32 = 1 << 3;
 }
 
 pub mod weap_flags {
@@ -331,6 +356,12 @@ impl PlayerState {
         kill_cam_look_at_entity: 0,
         kill_cam_client_num: 0,
         recoil_scale: 0,
+        ultra_flags: 0,
+        ultra_stamina: 0,
+        ultra_dash_time: 0,
+        ultra_wall_jumps: 0,
+        ultra_slam_time: 0,
+        ultra_slam_height: 0.0,
     };
 
     pub fn anim(&self) -> AnimPair {

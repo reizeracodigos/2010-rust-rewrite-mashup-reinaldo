@@ -36,5 +36,7 @@ pub use ui::{
 
 pub mod skate;
 pub use skate::SkateMode;
+pub mod ultra;
+pub use ultra::UltraMode;
 pub mod minecraft_ui;
 pub use minecraft_ui::{InventoryPuppet, McClick, McSlot, McStack, MinecraftUi};
